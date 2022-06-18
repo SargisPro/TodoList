@@ -31,9 +31,99 @@ const tasks = [
   },
 ];
 
+function getArrayOfTasks(arrOfTasks) {
+  const objOfTasks = arrOfTasks.reduce((acc, task) => {
+    acc[task._id] = task;
+    return acc;
+  }, {});
 
-function arrOfTasks (tasks) {
+  // Elemets UI
+  const listContainer = document.querySelector('.tasks-list-section .list-group');
+  const form = document.forms['addTask'];
+  const inputTitle = form.elements['title'];
+  const inputBody = form.elements['body'];
 
+
+  // Events
+  renderAllTasks(objOfTasks);
+  form.addEventListener('submit', onFormSubmitHandler);
+  listContainer.addEventListener('click', onDeleteTask);
+
+  function renderAllTasks(tasksList) {
+    if(!tasksList) {
+      alert('No tasks list');
+      return;
+    };
+
+    Object.values(tasksList).forEach(task => {
+      const list = listItemTemplate(task);
+    });
+  };
+
+  function listItemTemplate({_id, title, body} = {}) {
+    const task = `
+    <li  class="list-group-item d-flex align-items-center flex-wrap mt-2" data-task-id="${_id}">
+      <span style=" font-weight: bold">${title}</span>
+      <button class="btn btn-danger ml-auto delete-btn">Delete</button>
+      <p class="mt-2 w-100">
+        ${body}
+      </p>
+    </li>
+    `;
+    listContainer.insertAdjacentHTML('afterbegin', task);
+  };
+
+  function onFormSubmitHandler(e) {
+    e.preventDefault();
+
+    const titleValue = inputTitle.value;
+    const bodyValue = inputBody.value;
+
+    if(!titleValue || !bodyValue) {
+      alert('Please enter task title, and body');
+      return;
+    };
+
+    const task = createNewTask(titleValue, bodyValue);
+    listItemTemplate(task);
+    form.reset();
+
+  };
+
+  function  createNewTask(title, body) {
+    const newTask = {
+      title,
+      body,
+      completed: false,
+      _id: `${Date.now()}`
+    };
+
+    objOfTasks[newTask._id] = newTask;
+
+    return {... newTask};
+
+  };
+
+  function deleteTask(id) {
+    const isConfirm = confirm(`Exactly remove: ${objOfTasks[id].title} ?`);
+    if(!isConfirm) return isConfirm;
+    delete objOfTasks[id];
+    return isConfirm;
+  };
+
+  function deleteTaskFromHTML(confirmed, el) {
+    if(!confirmed) return;
+    el.remove();
+  };
+
+  function onDeleteTask({target}) {
+    if (target.classList.contains('delete-btn') ) {
+      const parent = target.parentElement;
+      const id = parent.dataset.taskId;
+      const confirmed = deleteTask(id);
+      deleteTaskFromHTML(confirmed,parent);
+    };
+  };
 };
 
-arrOfTasks(tasks);
+getArrayOfTasks(tasks);
